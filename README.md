@@ -30,12 +30,14 @@ arms/                  arm YAML specs (one tool per arm, no bundles)
 probes/templates/      tier-P probe templates, instantiated per target repo
 src/cc_bench/          the CLI
 results/               per-run output (gitignored)
+docs/                  design docs, ADRs, protocol
 ```
 
 ## Design docs
 
-Full rationale, ADRs, and protocol live in the `sdd-kit` repo
-(`/home/octrow/cybernet/sdd-kit`): `benchmark/PLAN-tools.md` and `benchmark/adr/`.
+Full rationale, ADRs, and protocol now live in this repo under `docs/`
+(`docs/PLAN-tools.md`, `docs/adr/`). They originated in the `sdd-kit`
+project (`/home/octrow/cybernet/sdd-kit`) before moving here.
 
 ## Protocol rules worth knowing
 
