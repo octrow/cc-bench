@@ -19,7 +19,6 @@ nav:ast-grep
 bash:rtk
 gh:gh-axi
 web:chrome-devtools-axi
-long:headroom
 "
 
 clone_for() {

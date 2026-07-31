@@ -4,7 +4,7 @@
   либо baseline + ровно одна тулза. Своя `CLAUDE_CONFIG_DIR` и/или
   свои артефакты в репо, закоммиченные в bench-base.
 - **Тулза (tool under test)** - то, что меряем ДО/ПОСЛЕ: skill
-  (ponytail, caveman...), CLI (rtk, ast-grep, gh-axi), MCP (headroom),
+  (ponytail, caveman...), CLI (rtk, ast-grep, gh-axi), MCP (context7),
   артефакты репо (openspec, graphify-кэш), целый kit (sdd-kit).
 - **Проба (probe)** - маленькая read-only задача с заранее известным
   ответом (answer key). Меряет стоимость добычи контекста, не качество

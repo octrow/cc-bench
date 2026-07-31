@@ -61,6 +61,5 @@ verify: >
   q3 requires the exact names EnhancedDispatcherMonitor, CampaignMetrics and
   SystemMetrics with no extra model invented. Partial credit is not awarded.
 exercises:
-  - headroom
   - rtk
 status: frozen

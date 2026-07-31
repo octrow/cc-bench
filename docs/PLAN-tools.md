@@ -15,14 +15,14 @@
 Цель теперь другая: не "ещё один эксперимент", а **инструмент** -
 отдельный репозиторий, который для любой пары (репо, тулза) выдаёт
 повторяемую цифру ДО/ПОСЛЕ: openspec, skills (ponytail, caveman,
-grill-with-docs), rtk, graphify, headroom, gh-axi, ast-grep,
+grill-with-docs), rtk, graphify, gh-axi, ast-grep,
 chrome-devtools-axi, целый sdd-kit.
 
 Ключевая идея дизайна: тулзы делятся на два класса, и мерить их надо
 по-разному (ADR-0002):
 
 - **Tier P (пробы).** Тулзы, меняющие КАК агент добывает контекст
-  (rtk, headroom, graphify, gh-axi, ast-grep, chrome-devtools-axi).
+  (rtk, graphify, gh-axi, ast-grep, chrome-devtools-axi).
   Код на выходе не меняется - меняется цена. Меряем на маленьких
   read-only задачах с заранее известным ответом. Дёшево (центы за
   прогон), полностью автоматом, n=3 без боли.
@@ -77,10 +77,13 @@ JetBrains: skill установлен, но ни разу не активиро�
 | sdd-kit целиком | F | весь процесс | $ на принятую задачу | `make sdd-check` + skill_activated |
 | rtk | P | меньше bash-выхлопа | input-токены на пробу | дельта `rtk gain` |
 | graphify (кэш посеян) | P | быстрее навигация | прочитано:изменено файлов, input-токены | чтение `graphify-out/*` |
-| headroom | P | компрессия контекста | input+cacheRead токены | дельта `headroom_stats` |
 | gh-axi | P | дешевле GitHub-запросы | токены на gh-пробу | вызовы gh-axi в Bash |
 | ast-grep | P | дешевле структурный поиск | токены на поиск-пробу | вызовы `ast-grep`/`sg` |
 | chrome-devtools-axi | P | дешевле инспекция веба | токены на web-пробу | вызовы тулзы |
+
+Выпилено: **headroom** (арма удалена 2026-07-31) - 0-2% сжатия, ломает
+префикс prompt-кэша, +45..62% к счёту; обоснование в sdd-kit
+`docs/ADR/ADR-0014-drop-headroom.md`.
 
 Для CLI-тулз (rtk, gh-axi, ast-grep, chrome-devtools-axi) арма = бинарь
 на PATH + одна hint-строка в CLAUDE.md о его существовании: доступность

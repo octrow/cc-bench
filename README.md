@@ -8,7 +8,7 @@ actually helps.
 ## Two tiers
 
 - **Tier P (probes).** Tools that change *how* the agent gathers context
-  (e.g. rtk, headroom, graphify, gh-axi, ast-grep). Output code doesn't
+  (e.g. rtk, graphify, gh-axi, ast-grep). Output code doesn't
   change, cost does. Measured on small read-only tasks with frozen answer
   keys - fully automated.
 - **Tier F (real tasks).** Tools that change *what* gets produced (e.g.

@@ -7,7 +7,7 @@ m1/m2 показали: харнесс собирается руками под 
 (/home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/prepare-m2.sh, /home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/finish-tails.sh, OTEL-блок из /home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/MANUAL.md, пересчёт
 активного времени). Каждый новый замер - снова ручная сборка.
 Цель - повторяемая цифра ДО/ПОСЛЕ для любой пары (репо, тулза):
-skill, rtk, openspec, graphify, headroom, gh-axi и т.д.
+skill, rtk, openspec, graphify, gh-axi и т.д.
 
 ## Решение
 Делаем отдельный репозиторий-инструмент (не скрипты в sdd-kit,

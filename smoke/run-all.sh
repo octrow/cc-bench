@@ -15,7 +15,7 @@ clone_for() {
   esac
 }
 
-ARMS="${ARMS_OVERRIDE:-baseline ast-grep caveman chrome-devtools-axi gh-axi graphify grill-with-docs headroom openspec ponytail rtk sdd-kit}"
+ARMS="${ARMS_OVERRIDE:-baseline ast-grep caveman chrome-devtools-axi gh-axi graphify grill-with-docs openspec ponytail rtk sdd-kit}"
 
 for ARM in $ARMS; do
   CLONE=$(clone_for "$ARM")
