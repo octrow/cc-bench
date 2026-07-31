@@ -4,7 +4,7 @@
 
 ## Контекст
 m1/m2 показали: харнесс собирается руками под каждый прогон
-(archive-m1-m2/prepare-m2.sh, archive-m1-m2/finish-tails.sh, OTEL-блок из archive-m1-m2/MANUAL.md, пересчёт
+(/home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/prepare-m2.sh, /home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/finish-tails.sh, OTEL-блок из /home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/MANUAL.md, пересчёт
 активного времени). Каждый новый замер - снова ручная сборка.
 Цель - повторяемая цифра ДО/ПОСЛЕ для любой пары (репо, тулза):
 skill, rtk, openspec, graphify, headroom, gh-axi и т.д.

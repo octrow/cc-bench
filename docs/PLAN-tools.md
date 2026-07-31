@@ -5,8 +5,8 @@
 ## 1. Контекст - зачем и почему именно так
 
 Мы дважды (m1, m2) сравнили "WBN с sdd-kit vs без" и оба раза харнесс
-собирался руками: клоны и армы - `archive-m1-m2/prepare-m2.sh`, гейты и диффы -
-`archive-m1-m2/finish-tails.sh`, телеметрия - export-блок из archive-m1-m2/MANUAL.md, активное
+собирался руками: клоны и армы - `/home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/prepare-m2.sh`, гейты и диффы -
+`/home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/finish-tails.sh`, телеметрия - export-блок из /home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/MANUAL.md, активное
 время - ручной пересчёт транскриптов. Выводы получились, но каждый
 новый замер - снова ручная сборка, а методологические ошибки m1
 (утечка контекста, судья с чужим baseline, гейты после прогонов)
@@ -97,7 +97,7 @@ JetBrains: skill установлен, но ни разу не активиро�
 - Turns, tool calls и их разбивка, прочитано:изменено файлов,
   компактификации, api errors - OTEL events + транскрипты.
 - **Активное время** - из транскриптов, паузы ожидания юзера вырезаются
-  (алгоритм archive-m1-m2/comparison-runs.md). Wall clock - справочная колонка.
+  (алгоритм /home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/comparison-runs.md). Wall clock - справочная колонка.
 - Fired-check армы (bool + чем подтверждён).
 - Tier P: правильность ответа по answer key (0/1).
 - Tier F: гейты (дифф применяется, ruff - только новые нарушения,
@@ -137,9 +137,9 @@ sonnet-субагенты - механика (скаффолд, портиров
 
 - **Фаза 0 - скаффолд репо** (sonnet): pyproject (uv), CLI-скелет,
   каталог `arms/*.yaml` (11 арм из §3), шаблоны проб, README.
-- **Фаза 1 - портирование харнесса** (sonnet): archive-m1-m2/prepare-m2.sh ->
+- **Фаза 1 - портирование харнесса** (sonnet): /home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/prepare-m2.sh ->
   `bench prepare` (клон, bench-base, .env, cfg-per-arm,
-  `--strict-mcp-config` для baseline); archive-m1-m2/finish-tails.sh -> гейты;
+  `--strict-mcp-config` для baseline); /home/octrow/cybernet/sdd-kit/docs/archive/benchmark-m1-m2/finish-tails.sh -> гейты;
   OTEL-блок; экстрактор метрик (OTEL + транскрипты + активное время).
 - **Фаза 2 - smoke**: каждая арма проходит fired-check на дешёвом
   промпте; go/no-go таблица. Мёртвые армы чиним или выкидываем здесь.
