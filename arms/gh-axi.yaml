@@ -1,0 +1,13 @@
+name: gh-axi
+tier: p
+hypothesis: gh-axi returns cheaper GitHub lookups than raw gh, lowering tokens per GitHub probe.
+primary_metric: tokens_per_gh_probe
+install:
+  - kind: path_binary
+    check: npx -y gh-axi --help
+  - kind: claude_md_hint
+    text: gh-axi is available - an agent-ergonomic wrapper around the GitHub CLI; prefer `npx -y gh-axi <command>` over raw `gh` for issues, PRs, runs, releases, and gists.
+fired_check:
+  kind: bash_calls_match
+  pattern: gh-axi
+hint: gh-axi is available - an agent-ergonomic wrapper around the GitHub CLI; prefer `npx -y gh-axi <command>` over raw `gh` for issues, PRs, runs, releases, and gists.

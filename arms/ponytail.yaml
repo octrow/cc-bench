@@ -1,0 +1,18 @@
+name: ponytail
+tier: f
+hypothesis: Ponytail produces smaller diffs at equal task success by forcing the simplest working solution.
+primary_metric: diff_size_at_equal_success
+install:
+  - kind: hook
+    src: ~/.claude/plugins/cache/ponytail/ponytail/4.7.0
+    text: >
+      Ponytail is a PLUGIN (SessionStart hook injects the mode), not a skill dir.
+      Install into the arm's CLAUDE_CONFIG_DIR via `claude plugin install ponytail@ponytail`.
+fired_check:
+  kind: bash_calls_match
+  pattern: "PONYTAIL MODE ACTIVE"
+notes: >
+  Hook-based plugin, so otel_skill_activated may never fire; the fired-check is
+  the hook banner "PONYTAIL MODE ACTIVE" in the session transcript instead.
+  JetBrains' independent test showed ponytail-as-skill never self-activating —
+  the plugin/hook form is the one worth measuring.

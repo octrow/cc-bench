@@ -1,0 +1,15 @@
+name: rtk
+tier: p
+hypothesis: rtk's token-optimized bash output proxy cuts input tokens per probe versus raw bash output.
+primary_metric: input_tokens_per_probe
+install:
+  - kind: path_binary
+    check: command -v rtk
+  - kind: hook
+    text: Install the rtk PreToolUse Bash rewrite hook into the arm's CLAUDE_CONFIG_DIR settings.json.
+  - kind: claude_md_hint
+    text: RTK is available - a token-optimized CLI proxy that cuts up to 90% of bash output; the hook rewrites bash commands transparently, and `rtk gain` shows savings analytics.
+fired_check:
+  kind: command_delta
+  command: rtk gain
+hint: RTK is available - a token-optimized CLI proxy that cuts up to 90% of bash output; the hook rewrites bash commands transparently, and `rtk gain` shows savings analytics.

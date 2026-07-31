@@ -1,0 +1,11 @@
+name: headroom
+tier: p
+hypothesis: The headroom MCP server compresses context, cutting input plus cacheRead tokens versus raw context.
+primary_metric: input_plus_cacheread_tokens
+install:
+  - kind: mcp
+    server: headroom
+    text: Add a single headroom MCP server entry to the arm's CLAUDE_CONFIG_DIR mcp config.
+fired_check:
+  kind: command_delta
+  command: headroom_stats

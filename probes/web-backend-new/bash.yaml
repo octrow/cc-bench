@@ -1,0 +1,47 @@
+id: wbn-bash-ruff-stats
+template: bash
+target_repo: web-backend-new
+generated_at: "2026-07-30"
+rationale: >
+  No unit-test subset in this monorepo runs deterministically offline (the
+  suites need Redis, PostgreSQL and sibling services), so this instance uses a
+  lint command with fully deterministic output instead of a test command. The
+  ruff version is pinned and --isolated is passed so neither the local ruff
+  install nor the repo's .ruff.toml files can shift the counts.
+prompt: >
+  From the repository root, run:
+  uvx ruff@0.12.11 check call-dispatcher-llm --isolated --no-cache --select
+  E,F,W,I,UP,B,C4,SIM --statistics
+  Then report the total number of findings and the per-rule breakdown.
+answer_key:
+  total: 267
+  per_rule:
+    E501: 217
+    I001: 35
+    UP006: 11
+    UP035: 2
+    SIM103: 1
+    SIM117: 1
+  fixable: 35
+  raw_output: |
+    217	E501  	[ ] line-too-long
+     35	I001  	[*] unsorted-imports
+     11	UP006 	[ ] non-pep585-annotation
+      2	UP035 	[ ] deprecated-import
+      1	SIM103	[ ] needless-bool
+      1	SIM117	[ ] multiple-with-statements
+    Found 267 errors.
+    [*] 35 fixable with the `--fix` option (12 hidden fixes can be enabled with the `--unsafe-fixes` option).
+  verified_by: >
+    Command run twice on 2026-07-30 from /home/octrow/cybernet/web-backend-new
+    at git HEAD 8d5620b0; identical output both times.
+verify: >
+  Score 1 only if the reported total is exactly 267 and all six rule codes
+  appear with their exact counts (E501=217, I001=35, UP006=11, UP035=2,
+  SIM103=1, SIM117=1); any wrong or missing number scores 0.
+invalidated_if: >
+  call-dispatcher-llm sources change - re-freeze the key against the pinned
+  git SHA before any run on a newer HEAD.
+exercises:
+  - rtk
+status: frozen

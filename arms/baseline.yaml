@@ -1,0 +1,6 @@
+name: baseline
+notes: >
+  Reference arm. Clean CLAUDE_CONFIG_DIR with zero skills, zero hooks,
+  zero MCP servers configured. Launched with --strict-mcp-config so no
+  stray MCP servers from ~/.claude.json leak in. All other arms are
+  measured as a delta against this arm.

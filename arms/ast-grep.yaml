@@ -1,0 +1,13 @@
+name: ast-grep
+tier: p
+hypothesis: ast-grep provides cheaper structural code search than plain grep, lowering tokens per search probe.
+primary_metric: tokens_per_search_probe
+install:
+  - kind: path_binary
+    check: command -v ast-grep || command -v sg
+  - kind: claude_md_hint
+    text: ast-grep is available - a structural code search and rewrite tool; prefer `ast-grep` (or `sg`) over grep for syntax-aware code search.
+fired_check:
+  kind: bash_calls_match
+  pattern: "(ast-grep|\\bsg\\b)"
+hint: ast-grep is available - a structural code search and rewrite tool; prefer `ast-grep` (or `sg`) over grep for syntax-aware code search.

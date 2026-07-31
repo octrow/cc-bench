@@ -1,0 +1,66 @@
+id: wbn-long-dispatcher
+template: long
+target_repo: web-backend-new
+generated_at: "2026-07-30"
+files:
+  - path: call-dispatcher-llm/main.py
+    lines: 2756
+  - path: call-dispatcher-llm/monitor.py
+    lines: 769
+  - path: call-dispatcher-llm/core/enum.py
+    lines: 712
+  - path: call-dispatcher-llm/schema/schemas.py
+    lines: 680
+files_verified_by: >
+  wc -l over all *.py in call-dispatcher-llm on 2026-07-30 at git HEAD
+  8d5620b0; these are the 4 largest non-test Python files in the service
+  (4917 lines total).
+prompt: >
+  Read call-dispatcher-llm/main.py, call-dispatcher-llm/monitor.py,
+  call-dispatcher-llm/core/enum.py and call-dispatcher-llm/schema/schemas.py,
+  then answer these three questions:
+  (1) In _determine_next_call, when both a due retry call and a stream call
+  are available for the same campaign, which one is dispatched, and what does
+  the function do before it looks at either source?
+  (2) In _reschedule_timezone_blocked_call, what timestamp is used when no
+  working-hours slot can be found, and what is that value anchored to?
+  (3) In monitor.py, what is the name of the main monitor class, and which
+  Pydantic models are defined in that file?
+answer_key:
+  q1:
+    answer: >
+      The retry call wins - retry takes precedence when it is due, and the
+      stream call is used only if there is no due retry call. Before checking
+      either source the function awaits
+      _promote_cycle_pending_callbacks_if_ready, which drains SPIN
+      cycle-pending callbacks into the retry ZSET (no-op for STANDARD
+      campaigns).
+    source: call-dispatcher-llm/main.py lines 1384-1432
+  q2:
+    answer: >
+      It falls back to anchor + 1 day (timedelta(days=1)). The anchor is
+      search_anchor = max(timezone_start_datetime parsed as UTC datetime,
+      current_datetime from state["current_time"]) - i.e. the later of the
+      subscriber's campaign start time and now, so the ZSET score is never in
+      the past. The same fallback applies when working_hours or
+      subscriber_timezone_name is missing, or when find_next_working_slot
+      finds nothing within settings.WORKING_HOURS_LOOKAHEAD_DAYS.
+    source: call-dispatcher-llm/main.py lines 2241-2337
+  q3:
+    answer: >
+      The class is EnhancedDispatcherMonitor (line 81). Two Pydantic BaseModel
+      classes are defined in the file: CampaignMetrics (line 23) and
+      SystemMetrics (line 66). There are exactly three top-level classes-plus-
+      functions of note; the only module-level function is main() at line 703.
+    source: call-dispatcher-llm/monitor.py lines 23, 66, 81, 703
+verify: >
+  Score 1 only if all three answers are correct: q1 requires both "retry wins"
+  and a mention of promoting/draining cycle-pending callbacks into the retry
+  ZSET; q2 requires "+1 day" and that it is anchored to max(campaign start,
+  current time) - the settings.WORKING_HOURS_LOOKAHEAD_DAYS detail is optional;
+  q3 requires the exact names EnhancedDispatcherMonitor, CampaignMetrics and
+  SystemMetrics with no extra model invented. Partial credit is not awarded.
+exercises:
+  - headroom
+  - rtk
+status: frozen

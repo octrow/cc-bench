@@ -1,0 +1,15 @@
+name: openspec
+tier: f
+hypothesis: Seeded OpenSpec specs improve context targeting, raising accepted-task value per dollar spent.
+primary_metric: usd_per_accepted_task
+install:
+  - kind: repo_artifacts
+    src: openspec/specs
+    text: >
+      Seed openspec/specs/* into the target repo working tree from the
+      curated source specs, then commit the seeded tree to bench-base
+      so every run starts from the same context.
+fired_check:
+  kind: tool_result_path
+  path_glob: "openspec/specs/*"
+setup_cost_tracked: true

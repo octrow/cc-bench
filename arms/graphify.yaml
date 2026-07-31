@@ -1,0 +1,15 @@
+name: graphify
+tier: p
+hypothesis: A pre-seeded knowledge-graph cache speeds up navigation, lowering the files-read-to-edited ratio and input tokens.
+primary_metric: files_read_to_edited_ratio
+install:
+  - kind: repo_artifacts
+    src: graphify-out
+    exclude_from_git: true
+    text: >
+      Copy a pre-built graphify-out/ cache into the target repo working
+      tree and git-exclude it so it is not committed to bench-base history.
+fired_check:
+  kind: tool_result_path
+  path_glob: "graphify-out/*"
+setup_cost_tracked: true

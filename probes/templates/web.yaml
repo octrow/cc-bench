@@ -1,0 +1,11 @@
+id: web
+title: Web page extraction
+tier: p
+prompt_template: >
+  Open {url} and extract {what}.
+answer_key_format: >
+  A frozen exact value (or short structured record) for {what} as it appears
+  on {url} at freeze time, reviewed by a human before the run.
+exercises:
+  - chrome-devtools-axi
+success_criterion: The extracted value matches the frozen answer key exactly.

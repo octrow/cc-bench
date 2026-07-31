@@ -1,0 +1,11 @@
+name: caveman
+tier: f
+hypothesis: Caveman shortens prose output, reducing output tokens without hurting task success.
+primary_metric: output_tokens
+install:
+  - kind: cfg_skill
+    src: ~/.agents/skills/_vendor/caveman/skills/caveman
+    text: Copy the caveman skill directory into the arm's CLAUDE_CONFIG_DIR skills folder.
+fired_check:
+  kind: otel_skill_activated
+  skill_name: caveman

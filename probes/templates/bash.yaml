@@ -1,0 +1,12 @@
+id: bash
+title: Bash output summarization
+tier: p
+prompt_template: >
+  Run {test_command} and summarize the failures.
+answer_key_format: >
+  A frozen list of failing test identifiers with their one-line failure
+  reasons, captured from a known-good run of {test_command} in the target
+  repo, reviewed by a human before the run.
+exercises:
+  - rtk
+success_criterion: The summarized failures match the frozen list of failing test identifiers exactly.

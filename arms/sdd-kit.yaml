@@ -1,0 +1,15 @@
+name: sdd-kit
+tier: f
+hypothesis: The whole sdd-kit process (bootstrap, seeded AGENTS.md, seeded specs) raises accepted-task value per dollar spent over any single component alone.
+primary_metric: usd_per_accepted_task
+install:
+  - kind: repo_artifacts
+    src: sdd-kit/bootstrap.sh
+    text: >
+      Run sdd-kit/bootstrap.sh against the target repo, seed a curated
+      AGENTS.md plus openspec/specs/*, then commit the resulting tree
+      to bench-base so every run starts from the same kit-bootstrapped state.
+fired_check:
+  kind: make_check
+  command: make sdd-check
+setup_cost_tracked: true

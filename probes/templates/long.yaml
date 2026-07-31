@@ -1,0 +1,12 @@
+id: long
+title: Long-context read and answer
+tier: p
+prompt_template: >
+  Read {files} and answer: {questions}
+answer_key_format: >
+  A frozen list of answers, one per question in {questions}, each traceable
+  to a specific location in {files}, reviewed by a human before the run.
+exercises:
+  - headroom
+  - rtk
+success_criterion: Every answer matches its frozen counterpart in the answer key.

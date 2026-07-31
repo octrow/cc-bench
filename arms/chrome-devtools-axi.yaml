@@ -1,0 +1,13 @@
+name: chrome-devtools-axi
+tier: p
+hypothesis: chrome-devtools-axi provides cheaper web/browser inspection than ad-hoc browser tooling, lowering tokens per web probe.
+primary_metric: tokens_per_web_probe
+install:
+  - kind: path_binary
+    check: npx -y chrome-devtools-axi --help
+  - kind: claude_md_hint
+    text: chrome-devtools-axi is available - an agent-ergonomic Chrome DevTools CLI; prefer `npx -y chrome-devtools-axi <command>` for navigating, snapshotting, and inspecting web pages.
+fired_check:
+  kind: bash_calls_match
+  pattern: chrome-devtools-axi
+hint: chrome-devtools-axi is available - an agent-ergonomic Chrome DevTools CLI; prefer `npx -y chrome-devtools-axi <command>` for navigating, snapshotting, and inspecting web pages.

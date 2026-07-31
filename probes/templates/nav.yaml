@@ -1,0 +1,13 @@
+id: nav
+title: Navigation - locate implementation
+tier: p
+prompt_template: >
+  Find where {behavior} is implemented; list files and line ranges.
+answer_key_format: >
+  A frozen list of {file_path: [start_line, end_line]} entries naming every
+  file and line range that actually implements {behavior} in the target repo,
+  reviewed by a human before the run.
+exercises:
+  - graphify
+  - ast-grep
+success_criterion: The listed files and line ranges exactly match the frozen answer key (no missing or extra files).

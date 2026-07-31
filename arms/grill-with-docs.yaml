@@ -1,0 +1,11 @@
+name: grill-with-docs
+tier: f
+hypothesis: The grill-with-docs skill drives decisions through questioning and recorded ADRs, raising task success and reducing user interventions.
+primary_metric: task_success_and_interventions
+install:
+  - kind: cfg_skill
+    src: ~/.agents/skills/grill-with-docs
+    text: Copy the grill-with-docs skill directory into the arm's CLAUDE_CONFIG_DIR skills folder.
+fired_check:
+  kind: otel_skill_activated
+  skill_name: grill-with-docs

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>cc-bench fixture - service port map</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; }
+  table { border-collapse: collapse; }
+  th, td { border: 1px solid #999; padding: 4px 10px; text-align: left; }
+</style>
+</head>
+<body>
+<h1>Service port map (fixture)</h1>
+<p>Static fixture for cc-bench Tier-P web probe. Values are invented, not real infrastructure.</p>
+<table id="service-ports">
+  <thead>
+    <tr><th>Service</th><th>Port</th><th>Protocol</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>orbit-gateway</td><td>8041</td><td>http</td></tr>
+    <tr><td>lumen-auth</td><td>8092</td><td>https</td></tr>
+    <tr><td>quartz-dispatch</td><td>8117</td><td>grpc</td></tr>
+    <tr><td>vellum-store</td><td>5443</td><td>tcp</td></tr>
+    <tr><td>tessera-cache</td><td>6390</td><td>redis</td></tr>
+    <tr><td>halcyon-metrics</td><td>9187</td><td>http</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,53 @@
+id: wbn-nav-apikey-auth
+template: nav
+target_repo: web-backend-new
+generated_at: "2026-07-30"
+prompt: >
+  In the api-gateway-service of this repository, find where an incoming
+  request's Cybernet API key (the WebAPI authentication flow) is extracted
+  from headers and validated. List the files and line ranges that implement
+  it.
+answer_key:
+  files:
+    api-gateway-service/app/utils/headers.py:
+      - name: extract_key
+        lines: [23, 29]
+        note: reads the "x-cybernet-api-key" request header, returns None if absent
+    api-gateway-service/app/middleware/auth_middleware.py:
+      - name: SSOAuthMiddleware._perform_webapi_authorization
+        lines: [141, 212]
+        note: >
+          main site - calls extract_key, 401 MISSING_KEY when no key, derives
+          the key prefix, checks the Redis "sso:<prefix>" authorized marker,
+          loads cached user data, falls back to sso_client.validate_api_key,
+          403 INSUFFICIENT_PERMISSIONS on failure
+      - name: SSOAuthMiddleware._is_webapi_request
+        lines: [392, 402]
+        note: gate that routes /external/* (except /external/api/v1/api-key) into the API-key flow
+      - name: SSOAuthMiddleware._safe_get_key_prefix
+        lines: [417, 428]
+        note: splits the key on "$"; raises 400 "Invalid key format" if not exactly 2 parts
+    api-gateway-service/app/client/sso_client.py:
+      - name: SSOClient.validate_api_key
+        lines: [202, 238]
+        note: 'POSTs {"key": key} to sso-service /api/v1/auth/key, returns (access_granted, user_data)'
+  required_file_paths:
+    - api-gateway-service/app/utils/headers.py
+    - api-gateway-service/app/middleware/auth_middleware.py
+    - api-gateway-service/app/client/sso_client.py
+  must_not_claim_elsewhere: >
+    No other file in api-gateway-service extracts or validates the API key;
+    grep for extract_key / validate_api_key returns only the three files above.
+verify: >
+  Score 1 only if the answer names all three paths in required_file_paths
+  (substring match on the path, any prefix allowed) and names no additional
+  file WITHIN api-gateway-service as an implementation site; mentioning
+  downstream services (e.g. sso-service internals) as context is allowed.
+  Line ranges are graded loosely - each cited range must overlap the
+  corresponding answer_key range, exact endpoints not required.
+  # amendment 2026-07-30 (before r4-r6 rerun): scoped must-not-claim to
+  # api-gateway-service; r1-r3 grades under the old wording stand as graded.
+exercises:
+  - graphify
+  - ast-grep
+status: frozen

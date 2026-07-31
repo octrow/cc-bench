@@ -1,0 +1,12 @@
+id: gh
+title: GitHub PR summary
+tier: p
+prompt_template: >
+  Summarize the last {n} PRs touching {dir}.
+answer_key_format: >
+  A frozen list of {n} PR numbers with title, merge status, and a one-line
+  summary of the change, pulled from the target repo's GitHub history and
+  reviewed by a human before the run.
+exercises:
+  - gh-axi
+success_criterion: The reported PR numbers and one-line summaries match the frozen answer key.

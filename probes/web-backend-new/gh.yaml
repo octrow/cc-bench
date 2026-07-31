@@ -1,0 +1,50 @@
+id: wbn-gh-merged-prs
+template: gh
+target_repo: web-backend-new
+github_repo: CybernetKZ/web-backend-new
+generated_at: "2026-07-30"
+frozen_as_of: "2026-07-30"
+prompt: >
+  For the GitHub repository CybernetKZ/web-backend-new, list the 3 most
+  recently merged pull requests as of 2026-07-30. For each, give the PR
+  number, its title, its base branch, and its head branch.
+answer_key:
+  prs:
+    - number: 1309
+      title: "Stage"
+      base: main
+      head: stage
+      merged_at: "2026-07-27T17:36:48Z"
+      summary: release promotion of stage into main
+    - number: 1308
+      title: "Dev"
+      base: stage
+      head: dev
+      merged_at: "2026-07-27T11:39:39Z"
+      summary: promotion of dev into stage
+    - number: 1306
+      title: "[bugfix/WEB-2256] PCP shutdown & processing refactor"
+      base: dev
+      head: bugfix/WEB-2256
+      merged_at: "2026-07-27T11:06:40Z"
+      summary: post-call-processor shutdown and processing refactor
+  note: >
+    Ordering is by mergedAt descending. PR 1307 (bugfix/WEB-2298, merged
+    2026-07-27T05:53:01Z) is the 4th most recent and must NOT appear; it is
+    listed above 1306 by `gh pr list --state merged` default ordering, which
+    sorts by creation, so an agent that trusts the default list order without
+    checking mergedAt will produce 1307 instead of 1306. This is deliberate.
+  verified_by: >
+    gh pr list --repo CybernetKZ/web-backend-new --state merged --limit 5
+    --json number,title,mergedAt,baseRefName,headRefName, run 2026-07-30;
+    gh was authenticated.
+verify: >
+  Score 1 only if exactly the three PR numbers 1309, 1308, 1306 are reported
+  (no 1307, no extras) with titles matching the key by substring; base/head
+  branches are graded as a bonus, not required.
+invalidated_if: >
+  A new PR is merged into CybernetKZ/web-backend-new - the key is only valid
+  for runs dated 2026-07-30 or re-frozen the same day as the run.
+exercises:
+  - gh-axi
+status: frozen

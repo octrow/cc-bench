@@ -1,0 +1,41 @@
+id: wbn-web-config-table
+template: web
+target_repo: web-backend-new
+generated_at: "2026-07-30"
+asset: /home/octrow/cybernet/cc-bench/probes/web-backend-new/assets/config-table.html
+prompt: >
+  Open file:///home/octrow/cybernet/cc-bench/probes/web-backend-new/assets/config-table.html
+  and extract the service port map table. Output it as a markdown table with
+  the same columns and row order as the page.
+answer_key:
+  columns: [Service, Port, Protocol]
+  rows:
+    - [orbit-gateway, 8041, http]
+    - [lumen-auth, 8092, https]
+    - [quartz-dispatch, 8117, grpc]
+    - [vellum-store, 5443, tcp]
+    - [tessera-cache, 6390, redis]
+    - [halcyon-metrics, 9187, http]
+  markdown: |
+    | Service | Port | Protocol |
+    | --- | --- | --- |
+    | orbit-gateway | 8041 | http |
+    | lumen-auth | 8092 | https |
+    | quartz-dispatch | 8117 | grpc |
+    | vellum-store | 5443 | tcp |
+    | tessera-cache | 6390 | redis |
+    | halcyon-metrics | 9187 | http |
+  verified_by: >
+    The page is a static local fixture authored for this probe; values are
+    invented and are the literal <td> contents of the file.
+verify: >
+  Score 1 only if all 6 service/port/protocol triples are correct and in the
+  page's row order; exact-match each of the 18 cell values (case-insensitive,
+  whitespace-normalized), and require markdown table syntax. Any wrong port
+  number or reordered row scores 0.
+notes: >
+  Local file:// URL by design - no network, so no flake. The page is fully
+  self-contained (inline CSS, no external requests).
+exercises:
+  - chrome-devtools-axi
+status: frozen
