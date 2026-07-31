@@ -10,4 +10,3 @@ install:
 fired_check:
   kind: bash_calls_match
   pattern: "(ast-grep|\\bsg\\b)"
-hint: ast-grep is available - a structural code search and rewrite tool; prefer `ast-grep` (or `sg`) over grep for syntax-aware code search.

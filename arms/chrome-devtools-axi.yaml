@@ -10,4 +10,3 @@ install:
 fired_check:
   kind: bash_calls_match
   pattern: chrome-devtools-axi
-hint: chrome-devtools-axi is available - an agent-ergonomic Chrome DevTools CLI; prefer `npx -y chrome-devtools-axi <command>` for navigating, snapshotting, and inspecting web pages.

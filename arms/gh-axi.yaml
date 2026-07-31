@@ -10,4 +10,3 @@ install:
 fired_check:
   kind: bash_calls_match
   pattern: gh-axi
-hint: gh-axi is available - an agent-ergonomic wrapper around the GitHub CLI; prefer `npx -y gh-axi <command>` over raw `gh` for issues, PRs, runs, releases, and gists.

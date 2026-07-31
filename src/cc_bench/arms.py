@@ -11,7 +11,8 @@ plus any number of free-form extra keys.
 fired_check is a dict with a required `kind` in KNOWN_FIRED_CHECK_KINDS,
 plus free-form extras.
 
-Optional top-level keys: setup_cost_tracked (bool), notes (str), hint (str).
+Optional top-level keys are free-form and unvalidated (setup_cost_tracked,
+notes, ...) -- nothing downstream reads them yet.
 
 baseline.yaml is special-cased: it only needs `name: baseline` and `notes`;
 everything else is skipped.
@@ -110,9 +111,6 @@ def validate_arm_doc(stem: str, doc: object) -> list[str]:
 
     if "fired_check" in doc:
         errors.extend(_errors_for_fired_check(prefix, doc["fired_check"]))
-
-    if "setup_cost_tracked" in doc and not isinstance(doc["setup_cost_tracked"], bool):
-        errors.append(f"{prefix}: setup_cost_tracked must be a bool")
 
     return errors
 

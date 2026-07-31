@@ -1,8 +1,8 @@
 """cc-bench CLI entry point.
 
-Phase 1: arms/prepare/gates/run/extract/report are real.
-`probes gen|freeze` and `smoke` land in Phase 2 (probe generation and
-fired-check smoke are conductor-driven; see PLAN-tools phases).
+Phase 1: arms/prepare/gates/run/extract/report are real. `probes gen|freeze`
+and `smoke` land in Phase 2 -- they are conductor-driven (see PLAN-tools
+phases) and get their subcommands then, not stubs now.
 """
 
 from __future__ import annotations
@@ -21,32 +21,12 @@ from cc_bench import run as run_mod
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARMS_DIR = REPO_ROOT / "arms"
 
-NOT_IMPLEMENTED = "not implemented until Phase 2: {what}"
-
-
-def _stub(what: str) -> int:
-    print(NOT_IMPLEMENTED.format(what=what))
-    return 2
-
-
 def cmd_arms_list(_args: argparse.Namespace) -> int:
     return arms_mod.cmd_list(ARMS_DIR)
 
 
 def cmd_arms_validate(_args: argparse.Namespace) -> int:
     return arms_mod.cmd_validate(ARMS_DIR)
-
-
-def cmd_probes_gen(args: argparse.Namespace) -> int:
-    return _stub(f"LLM instantiates probe templates against {args.repo} for human freeze")
-
-
-def cmd_probes_freeze(_args: argparse.Namespace) -> int:
-    return _stub("lock instantiated probes + answer keys so they cannot change before runs")
-
-
-def cmd_smoke(args: argparse.Namespace) -> int:
-    return _stub(f"run fired-check smoke prompt for arm '{args.arm}' against {args.repo}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -66,15 +46,6 @@ def build_parser() -> argparse.ArgumentParser:
     prepare_parser.add_argument("--force", action="store_true", help="delete a dirty existing clone")
     prepare_parser.set_defaults(func=prepare_mod.cmd_prepare)
 
-    probes_parser = subparsers.add_parser("probes", help="generate/freeze tier-P probes")
-    probes_sub = probes_parser.add_subparsers(dest="probes_command", required=True)
-    probes_gen = probes_sub.add_parser("gen", help="instantiate probe templates for a repo")
-    probes_gen.add_argument("--repo", required=True, help="path to target repo")
-    probes_gen.set_defaults(func=cmd_probes_gen)
-    probes_sub.add_parser("freeze", help="freeze instantiated probes + answer keys").set_defaults(
-        func=cmd_probes_freeze
-    )
-
     run_parser = subparsers.add_parser("run", help="headless measured run(s) for one arm")
     run_parser.add_argument("--arm", required=True, help="arm name")
     run_parser.add_argument("--tier", required=True, choices=["p", "f"])
@@ -84,8 +55,6 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--prompt-file", required=True, help="frozen prompt/probe text")
     run_parser.add_argument("--model", default=None, help="main model (default opus)")
     run_parser.add_argument("--workdir", default=None, help="bench workspace override")
-    run_parser.add_argument("--budget-usd", type=float, default=None)
-    run_parser.add_argument("--answer-key", default=None, help="tier P frozen answer key file")
     run_parser.set_defaults(func=run_mod.cmd_run)
 
     gates_parser = subparsers.add_parser("gates", help="diff + ruff/pytest/scope gates vs bench-base")
@@ -99,11 +68,6 @@ def build_parser() -> argparse.ArgumentParser:
     extract_parser = subparsers.add_parser("extract", help="OTEL + transcript -> one results.csv row")
     extract_mod.add_arguments(extract_parser)
     extract_parser.set_defaults(func=extract_mod.cmd_extract)
-
-    smoke_parser = subparsers.add_parser("smoke", help="run a fired-check smoke test for an arm")
-    smoke_parser.add_argument("--arm", required=True, help="arm name")
-    smoke_parser.add_argument("--repo", required=True, help="path to target repo")
-    smoke_parser.set_defaults(func=cmd_smoke)
 
     report_parser = subparsers.add_parser("report", help="build the median+IQR markdown report")
     report_parser.add_argument("--csv", default=str(REPO_ROOT / "results" / "results.csv"))

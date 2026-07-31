@@ -207,12 +207,12 @@ def cmd_gates(args: argparse.Namespace) -> int:
     lines.append(f"{'PASS' if ruff_ok else 'FAIL'} ruff ({ruff_detail})")
     lines.extend(ruff_lines)
 
-    if getattr(args, "pytest", None):
-        baseline_path = Path(args.pytest_baseline) if getattr(args, "pytest_baseline", None) else None
+    if args.pytest:
+        baseline_path = Path(args.pytest_baseline) if args.pytest_baseline else None
         pytest_ok, pytest_detail = pytest_gate(clone, args.pytest, baseline_path)
         lines.append(f"{'PASS' if pytest_ok else 'FAIL'} pytest ({pytest_detail})")
 
-    if getattr(args, "blast_radius", None):
+    if args.blast_radius:
         scope_ok, scope_detail = scope_creep_gate(diff_summary, Path(args.blast_radius))
         lines.append(f"{'PASS' if scope_ok else 'FAIL'} scope-creep ({scope_detail})")
 
@@ -224,11 +224,3 @@ def cmd_gates(args: argparse.Namespace) -> int:
     return 0
 
 
-def add_subparser(subparsers) -> None:
-    p = subparsers.add_parser("gates", help="capture diff + run ruff/pytest/scope-creep gates")
-    p.add_argument("--clone", required=True, help="path to the git clone to gate")
-    p.add_argument("--out", required=True, help="output prefix for .diff/.files.txt/.gates.txt")
-    p.add_argument("--pytest", default=None, help="pytest command to run (optional)")
-    p.add_argument("--pytest-baseline", default=None, help="file of baseline FAILED lines (optional)")
-    p.add_argument("--blast-radius", default=None, help="file of expected changed path globs (optional)")
-    p.set_defaults(func=cmd_gates)

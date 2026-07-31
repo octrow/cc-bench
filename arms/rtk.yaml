@@ -12,4 +12,3 @@ install:
 fired_check:
   kind: command_delta
   command: rtk gain
-hint: RTK is available - a token-optimized CLI proxy that cuts up to 90% of bash output; the hook rewrites bash commands transparently, and `rtk gain` shows savings analytics.

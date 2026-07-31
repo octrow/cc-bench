@@ -100,13 +100,11 @@ def make_clone(src: str, dest: Path, sha: str, force: bool, log: list[str]) -> N
 
 
 def copy_env_files(repo: str, dest: Path, log: list[str]) -> int:
-    found = run(
-        ["find", repo, "-maxdepth", "2", "-name", ".env", "-not", "-path", "*/.git/*"]
-    )
-    files = [f for f in found.stdout.splitlines() if f]
+    root = Path(repo)
+    # repo/.env and repo/*/.env -- same reach as the old `find -maxdepth 2`
+    files = [p for pat in (".env", "*/.env") for p in root.glob(pat) if ".git" not in p.parts]
     for f in files:
-        rel = Path(f).relative_to(repo)
-        target = dest / rel
+        target = dest / f.relative_to(root)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(f, target)
     note(f".env copied: {len(files)} file(s)", log)
@@ -114,10 +112,8 @@ def copy_env_files(repo: str, dest: Path, log: list[str]) -> int:
 
 
 def _resolve_src(repo: str, src: str) -> Path | None:
-    """Resolve an install-step `src` against the target repo, falling back
-    to the cc-bench arms/ parent dir (so arm-local fixtures also work)."""
-    candidates = [Path(repo) / src, Path(src).expanduser(), ARMS_DIR.parent / src]
-    for c in candidates:
+    """Resolve an install-step `src` against the target repo, else as-is."""
+    for c in (Path(repo) / src, Path(src).expanduser()):
         if c.exists():
             return c
     return None
@@ -284,9 +280,9 @@ def cmd_prepare(args) -> int:
     log: list[str] = []
     arm = args.arm
     repo = str(Path(args.repo).expanduser().resolve())
-    base_ref = getattr(args, "base_ref", None) or DEFAULT_BASE_REF
-    workdir = Path(getattr(args, "workdir", None) or DEFAULT_WORKDIR).expanduser()
-    force = bool(getattr(args, "force", False))
+    base_ref = args.base_ref or DEFAULT_BASE_REF
+    workdir = Path(args.workdir or DEFAULT_WORKDIR).expanduser()
+    force = bool(args.force)
 
     try:
         doc = load_arm(arm)

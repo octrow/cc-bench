@@ -23,6 +23,7 @@ import argparse
 import csv
 import json
 import sys
+from collections import Counter
 from collections.abc import Iterable, Iterator
 from datetime import datetime
 from pathlib import Path
@@ -38,6 +39,7 @@ TOKEN_TYPES = {
     "cacheRead": "cache_read",
     "cacheCreation": "cache_creation",
 }
+TOKEN_FIELDS = ("input", "output", "cache_creation", "cache_read")
 READ_TOOLS = ("Read", "Grep", "Glob", "NotebookRead")
 EDIT_TOOLS = ("Edit", "Write", "NotebookEdit", "MultiEdit")
 PATH_KEYS = ("file_path", "notebook_path", "path")
@@ -71,7 +73,6 @@ CSV_FIELDS = [
     "user_wait_s",
     "active_time_s",
     "largest_pause_s",
-    "fired_check_raw",
     "transcript",
     "otel",
 ]
@@ -87,40 +88,29 @@ def _warn(msg: str) -> None:
 
 
 def _iter_json_lines(path: Path) -> Iterator[dict]:
-    """Yield parsed JSON objects, skipping (and reporting) unparsable lines."""
-    bad = 0
+    """Yield parsed JSON objects, skipping unparsable lines."""
     try:
-        handle = path.open(encoding="utf-8", errors="replace")
+        with path.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(obj, dict):
+                    yield obj
     except OSError as exc:
         _warn(f"cannot read {path}: {exc}")
-        return
-    with handle:
-        for line in handle:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                obj = json.loads(line)
-            except json.JSONDecodeError:
-                bad += 1
-                continue
-            if isinstance(obj, dict):
-                yield obj
-    if bad:
-        _warn(f"{path.name}: skipped {bad} unparsable line(s)")
 
 
 def _attrs(obj: dict | None) -> dict:
     """OTLP-JSON attribute list -> plain dict (values unwrapped)."""
     out: dict[str, Any] = {}
-    for item in (obj or {}).get("attributes", []) or []:
-        if not isinstance(item, dict) or "key" not in item:
-            continue
-        value = item.get("value") or {}
-        if not isinstance(value, dict) or not value:
-            out[item["key"]] = None
-            continue
-        out[item["key"]] = next(iter(value.values()))
+    for item in (obj or {}).get("attributes") or []:
+        if isinstance(item, dict) and "key" in item:
+            value = item.get("value")
+            out[item["key"]] = next(iter(value.values()), None) if isinstance(value, dict) else None
     return out
 
 
@@ -134,20 +124,9 @@ def _ts(value: str | None) -> float | None:
         return None
 
 
-def _nano(value: Any) -> float | None:
-    try:
-        return int(value) / 1e9
-    except (TypeError, ValueError):
-        return None
-
-
 def _matches(resource_attrs: dict, arm: str | None, task: str | None, run: str | None) -> bool:
-    for key, want in (("arm", arm), ("task", task), ("run", run)):
-        if want is None:
-            continue
-        if str(resource_attrs.get(key, "")) != str(want):
-            return False
-    return True
+    wanted = (("arm", arm), ("task", task), ("run", run))
+    return all(str(resource_attrs.get(k, "")) == str(w) for k, w in wanted if w is not None)
 
 
 def otel_files(paths: Iterable[str | Path]) -> list[Path]:
@@ -188,8 +167,8 @@ def _series_key(name: str, attrs: dict) -> tuple:
 
 def iter_metric_points(
     obj: dict, arm: str | None, task: str | None, run: str | None
-) -> Iterator[tuple[str, bool, dict, float, float | None]]:
-    """Yield (metric name, is_cumulative, attrs, value, epoch) for wanted metrics."""
+) -> Iterator[tuple[str, bool, dict, float]]:
+    """Yield (metric name, is_cumulative, attrs, value) for wanted metrics."""
     for res_metrics in obj.get("resourceMetrics", []) or []:
         if not _matches(_attrs(res_metrics.get("resource")), arm, task, run):
             continue
@@ -205,15 +184,13 @@ def iter_metric_points(
                     if value is None:
                         _warn(f"{name}: datapoint without numeric value")
                         continue
-                    yield name, cumulative, _attrs(point), value, _nano(
-                        point.get("timeUnixNano")
-                    )
+                    yield name, cumulative, _attrs(point), value
 
 
 def iter_log_events(
     obj: dict, arm: str | None, task: str | None, run: str | None
-) -> Iterator[tuple[str, dict, float | None]]:
-    """Yield (event name, attrs, epoch) for every matching log record."""
+) -> Iterator[tuple[str, dict]]:
+    """Yield (event name, attrs) for every matching log record."""
     for res_logs in obj.get("resourceLogs", []) or []:
         if not _matches(_attrs(res_logs.get("resource")), arm, task, run):
             continue
@@ -224,8 +201,7 @@ def iter_log_events(
                 if not name:
                     body = record.get("body") or {}
                     name = str(body.get("stringValue", "")).replace("claude_code.", "")
-                stamp = _nano(record.get("timeUnixNano")) or _ts(attrs.get("event.timestamp"))
-                yield str(name or "unknown"), attrs, stamp
+                yield str(name or "unknown"), attrs
 
 
 def collect_otel(
@@ -245,28 +221,23 @@ def collect_otel(
     tokens: dict[str, dict[str, float]] = {}
     cost_delta = 0.0
     cumulative_max: dict[tuple, float] = {}
-    events: dict[str, int] = {}
+    events: Counter[str] = Counter()
     skills: list[str] = []
-    sessions: dict[str, int] = {}
-    window: list[float] = []
+    sessions: Counter[str] = Counter()
     seen_files = 0
 
-    def _note(sid: str | None, stamp: float | None) -> None:
+    def _note(sid: str | None) -> None:
         if sid:
-            sessions[sid] = sessions.get(sid, 0) + 1
-        if stamp is not None:
-            window.append(stamp)
+            sessions[sid] += 1
 
     for path in otel_files(paths):
         seen_files += 1
         for obj in _iter_json_lines(path):
-            for name, cumulative, attrs, value, stamp in iter_metric_points(
-                obj, arm, task, run
-            ):
+            for name, cumulative, attrs, value in iter_metric_points(obj, arm, task, run):
                 sid = attrs.get("session.id")
                 if session_id and sid != session_id:
                     continue
-                _note(sid, stamp)
+                _note(sid)
                 key = _series_key(name, attrs)
                 if cumulative:
                     previous = cumulative_max.get(key, 0.0)
@@ -286,12 +257,12 @@ def collect_otel(
                 bucket = tokens.setdefault(str(attrs.get("model") or "unknown"), {})
                 bucket[field] = bucket.get(field, 0.0) + increment
 
-            for name, attrs, stamp in iter_log_events(obj, arm, task, run):
+            for name, attrs in iter_log_events(obj, arm, task, run):
                 sid = attrs.get("session.id")
                 if session_id and sid != session_id:
                     continue
-                _note(sid, stamp)
-                events[name] = events.get(name, 0) + 1
+                _note(sid)
+                events[name] += 1
                 if name == "skill_activated":
                     skill = attrs.get("skill.name") or attrs.get("skill_name")
                     if skill:
@@ -304,7 +275,6 @@ def collect_otel(
         "events": events,
         "skills": skills,
         "sessions": sessions,
-        "window": (min(window), max(window)) if window else (None, None),
     }
 
 
@@ -351,28 +321,21 @@ def timings(records: list[dict]) -> dict:
             "user_wait_s": 0.0,
             "active_time_s": 0.0,
             "largest_pause_s": 0.0,
-            "pauses": [],
-            "start": None,
-            "end": None,
         }
-    start, end = stamped[0][0], stamped[-1][0]
-    span = end - start
-    pauses: list[tuple[float, str]] = []
+    span = stamped[-1][0] - stamped[0][0]
+    pauses: list[float] = []
     last_assistant: float | None = None
     for moment, record in stamped:
         if record.get("type") == "assistant":
             last_assistant = moment
         elif is_real_user_input(record) and last_assistant is not None:
-            pauses.append((moment - last_assistant, record.get("timestamp") or ""))
-    wait = sum(p[0] for p in pauses)
+            pauses.append(moment - last_assistant)
+    wait = sum(pauses)
     return {
         "wall_clock_s": round(span, 3),
         "user_wait_s": round(wait, 3),
         "active_time_s": round(span - wait, 3),
-        "largest_pause_s": round(max((p[0] for p in pauses), default=0.0), 3),
-        "pauses": pauses,
-        "start": start,
-        "end": end,
+        "largest_pause_s": round(max(pauses, default=0.0), 3),
     }
 
 
@@ -383,12 +346,11 @@ def parse_transcript(path: Path) -> dict:
     user_prompts = 0
     compactions = 0
     api_errors = 0
-    tools: dict[str, int] = {}
+    tools: Counter[str] = Counter()
     files_read: set[str] = set()
     files_edited: set[str] = set()
     models: set[str] = set()
     session_id = None
-    usage = {"input": 0, "output": 0, "cache_creation": 0, "cache_read": 0}
     usage_models: dict[str, dict[str, int]] = {}
     # One assistant message is split across several records (one per content
     # block), each repeating the same `usage` -- count each message once.
@@ -417,7 +379,7 @@ def parse_transcript(path: Path) -> dict:
         message_key = str(message.get("id") or record.get("uuid") or "")
         if used and message_key not in counted_messages:
             counted_messages.add(message_key)
-            per_model = usage_models.setdefault(str(model or "unknown"), dict.fromkeys(usage, 0))
+            per_model = usage_models.setdefault(str(model or "unknown"), dict.fromkeys(TOKEN_FIELDS, 0))
             for field, key in (
                 ("input", "input_tokens"),
                 ("output", "output_tokens"),
@@ -428,13 +390,12 @@ def parse_transcript(path: Path) -> dict:
                     amount = int(used.get(key) or 0)
                 except (TypeError, ValueError):
                     amount = 0
-                usage[field] += amount
                 per_model[field] += amount
         for block in message.get("content") or []:
             if not isinstance(block, dict) or block.get("type") != "tool_use":
                 continue
             name = str(block.get("name") or "unknown")
-            tools[name] = tools.get(name, 0) + 1
+            tools[name] += 1
             payload = block.get("input")
             if not isinstance(payload, dict):
                 continue
@@ -459,37 +420,23 @@ def parse_transcript(path: Path) -> dict:
         "compactions": compactions,
         "api_errors": api_errors,
         "models": sorted(models),
-        "usage": usage,
         "usage_models": usage_models,
         **time_info,
     }
 
 
-def session_transcripts(cfg_dir: Path) -> list[Path]:
-    """Main-session transcripts under a CLAUDE_CONFIG_DIR (subagents excluded)."""
-    projects = cfg_dir / "projects" if (cfg_dir / "projects").is_dir() else cfg_dir
-    return [
-        p
-        for p in sorted(projects.rglob("*.jsonl"))
-        if p.is_file() and "subagents" not in p.parts
-    ]
-
-
-def pick_transcript(
-    cfg_dir: str | Path,
-    session_ids: Iterable[str] = (),
-    window: tuple[float | None, float | None] = (None, None),
-) -> Path | None:
-    """Pick the session for this run: OTEL session.id first, else time overlap.
+def pick_transcript(cfg_dir: str | Path, session_ids: Iterable[str] = ()) -> Path | None:
+    """Pick the session for this run: OTEL session.id first, else newest.
 
     Fallback order:
       1. a transcript whose filename is one of the OTEL `session.id` values
          (largest one wins if several -- the main session, not a resumed stub);
-      2. the newest transcript whose span overlaps the OTEL time window;
-      3. the newest transcript in the directory.
+      2. the newest transcript in the directory.
     """
     cfg_dir = Path(cfg_dir).expanduser()
-    candidates = session_transcripts(cfg_dir)
+    # main sessions only -- subagent transcripts live under a subagents/ dir
+    projects = cfg_dir / "projects" if (cfg_dir / "projects").is_dir() else cfg_dir
+    candidates = [p for p in sorted(projects.rglob("*.jsonl")) if "subagents" not in p.parts]
     if not candidates:
         _warn(f"no transcripts under {cfg_dir}")
         return None
@@ -498,19 +445,6 @@ def pick_transcript(
     by_id = [p for p in candidates if p.stem in wanted]
     if by_id:
         return max(by_id, key=lambda p: p.stat().st_size)
-
-    start, end = window
-    if start is not None and end is not None:
-        overlapping = []
-        for path in candidates:
-            info = timings(list(_iter_json_lines(path)))
-            if info["start"] is None:
-                continue
-            if info["start"] <= end and info["end"] >= start:
-                overlapping.append((info["start"], path))
-        if overlapping:
-            return max(overlapping)[1]
-        _warn("no transcript overlaps the OTEL window; falling back to newest")
 
     return max(candidates, key=lambda p: p.stat().st_mtime)
 
@@ -539,12 +473,7 @@ def extract_run(
     newest matching session is picked) may be given; both may be omitted, in
     which case only the OTEL half of the row is filled.
     """
-    if otel is None:
-        otel_paths: list[str | Path] = []
-    elif isinstance(otel, (str, Path)):
-        otel_paths = [otel]
-    else:
-        otel_paths = list(otel)
+    otel_paths: list[str | Path] = [otel] if isinstance(otel, (str, Path)) else list(otel or [])
 
     otel_data = (
         collect_otel(otel_paths, arm=arm, task=task, run=run, session_id=session_id)
@@ -557,11 +486,7 @@ def extract_run(
 
     path = Path(transcript).expanduser() if transcript else None
     if path is None and cfg_dir:
-        path = pick_transcript(
-            cfg_dir,
-            session_ids=(otel_data or {}).get("sessions", {}),
-            window=(otel_data or {}).get("window", (None, None)),
-        )
+        path = pick_transcript(cfg_dir, session_ids=(otel_data or {}).get("sessions", {}))
     tx = parse_transcript(path) if path and path.is_file() else None
     if path and not tx:
         _warn(f"transcript not readable: {path}")
@@ -578,7 +503,7 @@ def extract_run(
         tokens_source = "transcript"
         _warn("no OTEL tokens; falling back to transcript usage (output undercounts ~2x)")
 
-    totals = dict.fromkeys(("input", "output", "cache_creation", "cache_read"), 0)
+    totals = dict.fromkeys(TOKEN_FIELDS, 0)
     for bucket in models_tokens.values():
         for field in totals:
             totals[field] += int(bucket.get(field, 0) or 0)
@@ -597,11 +522,11 @@ def extract_run(
     reads = (tx or {}).get("files_read", 0)
     edits = (tx or {}).get("files_edited", 0)
 
-    sessions = (otel_data or {}).get("sessions", {})
+    sessions: Counter[str] = (otel_data or {}).get("sessions", Counter())
     resolved_session = (
         session_id
         or (tx or {}).get("session_id")
-        or (max(sessions, key=lambda s: sessions[s]) if sessions else None)
+        or (sessions.most_common(1)[0][0] if sessions else None)
     )
 
     row = {
@@ -633,7 +558,6 @@ def extract_run(
         "user_wait_s": (tx or {}).get("user_wait_s"),
         "active_time_s": (tx or {}).get("active_time_s"),
         "largest_pause_s": (tx or {}).get("largest_pause_s"),
-        "fired_check_raw": None,  # filled by gates/smoke, not here
         "transcript": str(tx["path"]) if tx else "",
         "otel": ";".join(str(p) for p in otel_paths),
     }
@@ -721,30 +645,20 @@ def add_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
 
 
 def cmd_extract(args: argparse.Namespace) -> int:
-    otel = getattr(args, "otel", None)
-    if not otel and not getattr(args, "transcript", None) and not getattr(args, "cfg", None):
+    if not args.otel and not args.transcript and not args.cfg:
         print("extract: need at least one of --otel, --transcript, --cfg", file=sys.stderr)
         return 2
     row = extract_run(
-        otel=otel,
-        arm=getattr(args, "arm", None),
-        task=getattr(args, "task", None),
-        run=getattr(args, "run", None),
-        transcript=getattr(args, "transcript", None),
-        cfg_dir=getattr(args, "cfg", None),
-        session_id=getattr(args, "session_id", None),
+        otel=args.otel,
+        arm=args.arm,
+        task=args.task,
+        run=args.run,
+        transcript=args.transcript,
+        cfg_dir=args.cfg,
+        session_id=args.session_id,
     )
     print(format_summary(row))
-    if not getattr(args, "no_csv", False):
-        written = append_csv(row, getattr(args, "csv", None) or DEFAULT_CSV)
+    if not args.no_csv:
+        written = append_csv(row, args.csv or DEFAULT_CSV)
         print(f"  -> appended to {written}")
     return 0
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = add_arguments(argparse.ArgumentParser(prog="cc-bench extract"))
-    return cmd_extract(parser.parse_args(argv))
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

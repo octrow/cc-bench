@@ -116,15 +116,6 @@ def cmd_run(args: argparse.Namespace) -> int:
     log_dir = results_dir / "logs"
     gates_dir = results_dir / "gates"
 
-    if args.budget_usd:
-        print(f"note: budget cap ${args.budget_usd} noted; spend accounting happens at report/conductor level")
-
-    if args.tier == "p" and getattr(args, "answer_key", None):
-        print(
-            f"note: tier P answer key {args.answer_key} given - grading against it happens in "
-            "the report/conductor step, not in `bench run`"
-        )
-
     for n in range(1, runs + 1):
         _reset_clone(clone)
         branch = _branch_for(args.task, args.arm, n)
@@ -150,16 +141,3 @@ def cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
-def add_subparser(subparsers) -> None:
-    p = subparsers.add_parser("run", help="headless measured run(s) of one arm against one task")
-    p.add_argument("--arm", required=True, help="arm name (matches arms/<name>.yaml)")
-    p.add_argument("--tier", required=True, choices=["p", "f"], help="tier P (probe) or F (real task)")
-    p.add_argument("--repo-name", required=True, help="locates clone at ~/bench/<repo-name>/<arm>")
-    p.add_argument("--workdir", default=None, help="override clone location instead of ~/bench/<repo-name>/<arm>")
-    p.add_argument("--task", required=True, help="task/probe id, used in branch names and OTEL tags")
-    p.add_argument("--runs", type=int, default=DEFAULT_RUNS, help=f"number of sequential runs (default {DEFAULT_RUNS})")
-    p.add_argument("--prompt-file", required=True, help="path to the frozen prompt/probe text")
-    p.add_argument("--model", default=DEFAULT_MODEL, help=f"model (default {DEFAULT_MODEL})")
-    p.add_argument("--budget-usd", type=float, default=None, help="optional budget cap note")
-    p.add_argument("--answer-key", default=None, help="tier P: path to frozen answer key (graded later)")
-    p.set_defaults(func=cmd_run)

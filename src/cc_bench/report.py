@@ -188,11 +188,17 @@ def _per_task_tables(grouped: dict[tuple[str, str], list[dict]]) -> list[str]:
     return lines
 
 
+def _by_arm(grouped: dict[tuple[str, str], list[dict]]) -> dict[str, list[dict]]:
+    """Collapse the (task, arm) grouping down to arm -> all its rows."""
+    out: dict[str, list[dict]] = defaultdict(list)
+    for (_task, arm), rows in grouped.items():
+        out[arm].extend(rows)
+    return out
+
+
 def _tool_usage_section(grouped: dict[tuple[str, str], list[dict]]) -> list[str]:
     lines = ["## Tool usage", ""]
-    by_arm: dict[str, list[dict]] = defaultdict(list)
-    for (_task, arm), rows in grouped.items():
-        by_arm[arm].extend(rows)
+    by_arm = _by_arm(grouped)
 
     for arm in sorted(by_arm):
         rows = by_arm[arm]
@@ -229,11 +235,7 @@ def _recommendations_section(grouped: dict[tuple[str, str], list[dict]]) -> list
     lines = ["## Recommendations for the measured tool", "", "_Scaffold for conductor interpretation - not conclusions._", ""]
     bullets: list[str] = []
 
-    by_arm: dict[str, list[dict]] = defaultdict(list)
-    for (_task, arm), rows in grouped.items():
-        by_arm[arm].extend(rows)
-
-    for arm, rows in sorted(by_arm.items()):
+    for arm, rows in sorted(_by_arm(grouped).items()):
         if arm == BASELINE_ARM:
             continue
         fired_flags = [r.get("fired_check") for r in rows if "fired_check" in r]
@@ -272,9 +274,7 @@ def _recommendations_section(grouped: dict[tuple[str, str], list[dict]]) -> list
 
 def _verdicts_section(grouped: dict[tuple[str, str], list[dict]], primary_metrics: dict[str, str]) -> list[str]:
     lines = ["## Verdicts", "", "_Auto-flagged \"no-signal\" when primary-metric IQR overlaps baseline; otherwise TBD conductor._", ""]
-    by_arm: dict[str, list[dict]] = defaultdict(list)
-    for (_task, arm), rows in grouped.items():
-        by_arm[arm].extend(rows)
+    by_arm = _by_arm(grouped)
 
     for arm in sorted(by_arm):
         if arm == BASELINE_ARM:
@@ -288,8 +288,7 @@ def _verdicts_section(grouped: dict[tuple[str, str], list[dict]], primary_metric
         col = candidate_cols[0]
 
         arm_stat = _stats(_metric_values(rows, col))
-        baseline_rows = [r for (t, a), rs in grouped.items() if a == BASELINE_ARM for r in rs]
-        base_stat = _stats(_metric_values(baseline_rows, col))
+        base_stat = _stats(_metric_values(by_arm.get(BASELINE_ARM, []), col))
 
         if not arm_stat.get("n") or not base_stat.get("n"):
             verdict = "no-signal (insufficient data)"
@@ -330,9 +329,3 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
-def add_subparser(subparsers) -> None:
-    p = subparsers.add_parser("report", help="aggregate results.csv into a median+IQR markdown report")
-    p.add_argument("--csv", default=DEFAULT_CSV, help=f"input results CSV (default {DEFAULT_CSV})")
-    p.add_argument("--out", default=DEFAULT_OUT, help=f"output markdown path (default {DEFAULT_OUT})")
-    p.add_argument("--arms-dir", default="arms", help="arms/*.yaml directory for primary_metric lookup")
-    p.set_defaults(func=cmd_report)
