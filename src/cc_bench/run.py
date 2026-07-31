@@ -1,10 +1,10 @@
 """Headless measured runs of a single arm against a single task.
 
-IMPORTANT — interleaving lives one layer up. cmd_run executes N sequential
+IMPORTANT - interleaving lives one layer up. cmd_run executes N sequential
 runs of ONE arm. The protocol's honesty rule (PLAN-tools.md §5.3:
 "T0,Tx,Tx,T0,..." interleaved order) is an orchestration concern for
 whatever drives `bench run` in a loop (the conductor, or a future
-`bench campaign` command) — this module never reaches across arms and
+`bench campaign` command) - this module never reaches across arms and
 never reorders itself. Each `bench run` invocation is one arm, one task,
 N runs, strictly sequential, with a 5s pause between runs to avoid any
 resource-contention skew.
@@ -121,7 +121,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     if args.tier == "p" and getattr(args, "answer_key", None):
         print(
-            f"note: tier P answer key {args.answer_key} given — grading against it happens in "
+            f"note: tier P answer key {args.answer_key} given - grading against it happens in "
             "the report/conductor step, not in `bench run`"
         )
 

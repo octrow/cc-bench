@@ -8,7 +8,7 @@ answer key.
 
 A human reviews and **freezes** that answer key before any measured run.
 Frozen instances live in `probes/<repo>/` (one file per instantiated probe)
-and never change after freeze — a probe with a changed answer key is a new
+and never change after freeze - a probe with a changed answer key is a new
 probe, not an edit to the old one.
 
 Templates themselves may evolve over time; frozen instances under

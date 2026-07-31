@@ -3,7 +3,7 @@
 One cheap prompt per arm, designed to trigger that arm's fired-check.
 Frozen by the conductor before smoke runs. Model: sonnet (haiku may skip
 skills). Success = fired-check evidence appears (OTEL skill_activated,
-transcript tool calls, counter delta) — NOT answer quality.
+transcript tool calls, counter delta) - NOT answer quality.
 
 Run pattern per arm:
 

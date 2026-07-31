@@ -2,12 +2,12 @@
 
 Ported from sdd-kit/benchmark/finish-tails.sh (proven m1/m2 gate logic).
 Gates never fail the CLI: cmd_gates always exits 0. Gate outcomes are data
-for the report, not a CI signal — a FAIL line in <out>.gates.txt is the
+for the report, not a CI signal - a FAIL line in <out>.gates.txt is the
 product, not a stop condition.
 
 Ruff gate: only *.py files that changed are checked. "New violation" means
 a (file, rule_code) pair whose count increased vs. the same file's content
-at the bench-base ref. CPY001 (copyright header) is always excluded — it is
+at the bench-base ref. CPY001 (copyright header) is always excluded - it is
 noise inherited from repo templates, not something a benchmarked tool
 could plausibly introduce or fix.
 """
@@ -191,7 +191,7 @@ def cmd_gates(args: argparse.Namespace) -> int:
     """CLI entry: bench gates --clone PATH --out PREFIX [--pytest CMD]
     [--pytest-baseline FILE] [--blast-radius FILE]
 
-    Always exits 0 — gates produce data (PREFIX.gates.txt) for the report,
+    Always exits 0 - gates produce data (PREFIX.gates.txt) for the report,
     they are not a CI pass/fail signal.
     """
     clone = Path(args.clone).resolve()

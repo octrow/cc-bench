@@ -1,6 +1,6 @@
 """Aggregate results.csv into the median+IQR markdown report.
 
-Row shape assumed (flat, one row per arm/task/run — see extract.py, which
+Row shape assumed (flat, one row per arm/task/run - see extract.py, which
 owns results.csv's schema): at minimum `task`, `arm`, `run`. Any of the
 following numeric columns are aggregated when present, so the report
 degrades gracefully if a column hasn't landed yet: cost_usd, active_time_s,
@@ -11,7 +11,7 @@ JSON-encoded per-row breakdowns (tool name -> count / model name -> tokens);
 `compactions` is an int count; `success` is 0/1.
 
 Design note: wall_s is a reference column only. Per ADR-0005/PLAN-tools.md
-§5.6, active_time_s is the metric that ever appears in a verdict — wall
+§5.6, active_time_s is the metric that ever appears in a verdict - wall
 clock is not, because it is contaminated by user-wait time in interactive
 sessions (not applicable here since runs are headless, but the rule is
 kept uniform with the rest of the toolkit's reports).
@@ -223,10 +223,10 @@ def _tool_usage_section(grouped: dict[tuple[str, str], list[dict]]) -> list[str]
 def _recommendations_section(grouped: dict[tuple[str, str], list[dict]]) -> list[str]:
     """Mandatory per ADR-0005: a TODO scaffold, never empty, always renders.
 
-    Bullets are data-driven stubs — the conductor interprets them, this
+    Bullets are data-driven stubs - the conductor interprets them, this
     function does not attempt to draw conclusions on its own.
     """
-    lines = ["## Recommendations for the measured tool", "", "_Scaffold for conductor interpretation — not conclusions._", ""]
+    lines = ["## Recommendations for the measured tool", "", "_Scaffold for conductor interpretation - not conclusions._", ""]
     bullets: list[str] = []
 
     by_arm: dict[str, list[dict]] = defaultdict(list)
@@ -239,18 +239,18 @@ def _recommendations_section(grouped: dict[tuple[str, str], list[dict]]) -> list
         fired_flags = [r.get("fired_check") for r in rows if "fired_check" in r]
         if fired_flags and not all(_is_truthy(f) for f in fired_flags):
             fail_n = sum(not _is_truthy(f) for f in fired_flags)
-            bullets.append(f"- **{arm}**: fired-check failed on {fail_n}/{len(fired_flags)} runs — TODO conductor: dead arm or install bug?")
+            bullets.append(f"- **{arm}**: fired-check failed on {fail_n}/{len(fired_flags)} runs - TODO conductor: dead arm or install bug?")
 
         skill_flags = [r.get("skill_activated") for r in rows if "skill_activated" in r]
         if skill_flags and not any(_is_truthy(f) for f in skill_flags):
-            bullets.append(f"- **{arm}**: skill_activated never true across {len(skill_flags)} runs — TODO conductor: is the trigger wired up?")
+            bullets.append(f"- **{arm}**: skill_activated never true across {len(skill_flags)} runs - TODO conductor: is the trigger wired up?")
 
         cost_values = _metric_values(rows, "cost_usd")
         success_values = _metric_values(rows, "success")
         if cost_values and success_values and statistics.fmean(success_values) < 1.0 and statistics.fmean(cost_values) > 0:
             bullets.append(
                 f"- **{arm}**: spending (median cost ${statistics.median(cost_values):.2f}) without full success "
-                f"(success rate {statistics.fmean(success_values):.0%}) — TODO conductor: token burn without payoff?"
+                f"(success rate {statistics.fmean(success_values):.0%}) - TODO conductor: token burn without payoff?"
             )
 
         for (task, a), task_rows in grouped.items():
@@ -260,10 +260,10 @@ def _recommendations_section(grouped: dict[tuple[str, str], list[dict]]) -> list
             active = _stats(_metric_values(task_rows, "active_time_s"))
             base_active = _stats(_metric_values(baseline_rows, "active_time_s"))
             if active.get("n") and base_active.get("n") and _iqr_overlaps(active, base_active):
-                bullets.append(f"- **{arm}/{task}**: active_time_s IQR overlaps baseline — TODO conductor: is this a real effect or noise?")
+                bullets.append(f"- **{arm}/{task}**: active_time_s IQR overlaps baseline - TODO conductor: is this a real effect or noise?")
 
     if not bullets:
-        bullets.append("- No automatic flags raised from the current data — TODO conductor: sanity-check this is expected (enough runs? fired-check columns populated?).")
+        bullets.append("- No automatic flags raised from the current data - TODO conductor: sanity-check this is expected (enough runs? fired-check columns populated?).")
 
     lines.extend(bullets)
     lines.append("")

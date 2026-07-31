@@ -161,7 +161,7 @@ def _install_mcp(step: dict, cfg_dir: Path, log: list[str]) -> None:
         note(f"mcp: {server} present in {claude_json}", log)
     else:
         note(
-            f"mcp: {server} NOT found in {claude_json} — add it manually "
+            f"mcp: {server} NOT found in {claude_json} - add it manually "
             f"({step.get('text', '')})",
             log,
         )
@@ -235,7 +235,7 @@ def auth_check(cfg_dir: Path, log: list[str]) -> None:
     note(f"claude --version (CLAUDE_CONFIG_DIR={cfg_dir}): {version}", log)
     note(
         f"REMINDER: {cfg_dir} needs a one-time interactive subscription login "
-        "(`CLAUDE_CONFIG_DIR=... claude` then /login) — never an API key",
+        "(`CLAUDE_CONFIG_DIR=... claude` then /login) - never an API key",
         log,
     )
 
