@@ -69,6 +69,7 @@ CSV_FIELDS = [
     "compactions",
     "api_errors",
     "skill_activated",
+    "fired_check",
     "wall_clock_s",
     "user_wait_s",
     "active_time_s",
@@ -466,6 +467,7 @@ def extract_run(
     transcript: str | Path | None = None,
     cfg_dir: str | Path | None = None,
     session_id: str | None = None,
+    fired_check: str | None = None,
 ) -> dict:
     """Build one metrics row from an OTEL export and a session transcript.
 
@@ -554,6 +556,9 @@ def extract_run(
         "compactions": compactions,
         "api_errors": api_errors,
         "skill_activated": ";".join(skills),
+        # the arm's fired-check is evaluated by the smoke run, not here; "" means
+        # "not measured" and report.py skips it rather than scoring it as a fail
+        "fired_check": fired_check or "",
         "wall_clock_s": (tx or {}).get("wall_clock_s"),
         "user_wait_s": (tx or {}).get("user_wait_s"),
         "active_time_s": (tx or {}).get("active_time_s"),
@@ -615,6 +620,7 @@ def format_summary(row: dict) -> str:
         ),
         ("compactions / api errors", f"{row.get('compactions')} / {row.get('api_errors')}"),
         ("skills", row.get("skill_activated") or "-"),
+        ("fired-check", row.get("fired_check") or "not measured"),
         ("span (transcript)", minutes(row.get("wall_clock_s"))),
         ("user wait", minutes(row.get("user_wait_s"))),
         ("ACTIVE time", minutes(row.get("active_time_s"))),
@@ -639,6 +645,11 @@ def add_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument("--session-id", dest="session_id")
     parser.add_argument("--transcript", help="session .jsonl (skips session picking)")
     parser.add_argument("--cfg", help="CLAUDE_CONFIG_DIR to pick the session from")
+    parser.add_argument(
+        "--fired-check",
+        dest="fired_check",
+        help="arm's fired-check verdict for this run (true/false); omit if not measured",
+    )
     parser.add_argument("--csv", default=str(DEFAULT_CSV), help=f"default: {DEFAULT_CSV}")
     parser.add_argument("--no-csv", action="store_true", help="print only, do not append")
     return parser
@@ -656,6 +667,7 @@ def cmd_extract(args: argparse.Namespace) -> int:
         transcript=args.transcript,
         cfg_dir=args.cfg,
         session_id=args.session_id,
+        fired_check=args.fired_check,
     )
     print(format_summary(row))
     if not args.no_csv:

@@ -7,7 +7,9 @@ degrades gracefully if a column hasn't landed yet: cost_usd, active_time_s,
 wall_s, input_tokens, output_tokens, cache_creation_tokens,
 cache_read_tokens, tool_calls, turns. `tools_json` / `models_json` are
 JSON-encoded per-row breakdowns (tool name -> count / model name -> tokens);
-`fired_check` and `skill_activated` are truthy strings ("true"/"1"/...);
+`fired_check` and `skill_activated` are truthy strings ("true"/"1"/...) -
+an empty `fired_check` means the smoke run did not measure it for that row,
+so it is skipped rather than scored as a failure;
 `compactions` is an int count; `success` is 0/1.
 
 Design note: wall_s is a reference column only. Per ADR-0005/PLAN-tools.md
@@ -205,7 +207,7 @@ def _tool_usage_section(grouped: dict[tuple[str, str], list[dict]]) -> list[str]
         tool_counts = _tool_counts(rows)
         top = tool_counts.most_common(5)
         compactions = sum(int(_to_float(r.get("compactions")) or 0) for r in rows)
-        fired_flags = [r.get("fired_check") for r in rows if "fired_check" in r]
+        fired_flags = [v for r in rows if (v := r.get("fired_check"))]
         skill_flags = [r.get("skill_activated") for r in rows if "skill_activated" in r]
 
         lines.append(f"### {arm}")
@@ -238,7 +240,7 @@ def _recommendations_section(grouped: dict[tuple[str, str], list[dict]]) -> list
     for arm, rows in sorted(_by_arm(grouped).items()):
         if arm == BASELINE_ARM:
             continue
-        fired_flags = [r.get("fired_check") for r in rows if "fired_check" in r]
+        fired_flags = [v for r in rows if (v := r.get("fired_check"))]
         if fired_flags and not all(_is_truthy(f) for f in fired_flags):
             fail_n = sum(not _is_truthy(f) for f in fired_flags)
             bullets.append(f"- **{arm}**: fired-check failed on {fail_n}/{len(fired_flags)} runs - TODO conductor: dead arm or install bug?")
