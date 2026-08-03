@@ -120,9 +120,10 @@ tier-P report has 11.
 grill-with-docs, sdd-kit); needs a real ticket, gates and blind judging.
 Two blockers carried over from smoke: **caveman and ponytail never fire** -
 the skill is installed but never activates - so by the protocol they get fixed
-or dropped, not measured. The `sdd-kit` arm tracks a moving target: its clone
-is frozen on the 2026-07-30 kit while the kit itself moved on - see the
-staleness header in `results/sdd-kit-static-check.md` before freezing anything.
+or dropped, not measured. The `sdd-kit` arm was **re-frozen on 2026-08-01**
+against the current kit (`bench-base` = `917f950b`, previous freeze kept at
+branch `bench-base-20260730`); gates pass, details and one new sdd-kit defect
+are in `results/sdd-kit-static-check.md`.
 
 CLI: `arms`, `prepare`, `gates`, `run`, `extract`, `report` are functional and
 were used for the tier-P phase. The extractor is verified against real m1/m2
