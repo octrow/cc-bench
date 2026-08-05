@@ -55,6 +55,18 @@ def _default_task(repo: Path) -> str:
     return branch if result.returncode == 0 and branch not in ("", "HEAD") else "adhoc"
 
 
+def _ask_task(repo: Path) -> str:
+    """Confirm the task id at the prompt; Enter takes the branch name."""
+    guess = _default_task(repo)
+    if not sys.stdin.isatty():
+        return guess
+    try:
+        return input(f"task id [{guess}]: ").strip() or guess
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return guess
+
+
 def _pick_transcript(cfg_dir: Path, repo: Path, since: float | None) -> Path | None:
     """Newest main-session transcript for `repo`, optionally touched after `since`."""
     project_dir = cfg_dir / "projects" / _slug(repo)
@@ -102,7 +114,7 @@ def cmd_session(args: argparse.Namespace) -> int:
     cfg_dir = Path(args.cfg).expanduser().resolve()
     csv_path = Path(args.csv).expanduser()
     arm = args.arm
-    task = args.task or _default_task(repo)
+    task = args.task or (_default_task(repo) if args.no_launch else _ask_task(repo))
     run = args.run or _next_run(csv_path, arm, task)
 
     since = None

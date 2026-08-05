@@ -10,6 +10,7 @@ import os
 import pathlib
 import tempfile
 
+from cc_bench.cli import with_default_command
 from cc_bench.session import _next_run, _pick_transcript, _preflight, _slug
 
 
@@ -64,6 +65,13 @@ def test_preflight_flags_telemetry_off() -> None:
 
         (cfg / "settings.json").write_text(json.dumps({"env": {"CLAUDE_CODE_ENABLE_TELEMETRY": "1"}}))
         assert not any("telemetry is off" in p for p in _preflight(cfg))
+
+
+def test_bare_bench_means_session() -> None:
+    assert with_default_command([]) == ["session"]
+    assert with_default_command(["--task", "CF-1"]) == ["session", "--task", "CF-1"]
+    assert with_default_command(["report"]) == ["report"]  # real subcommands untouched
+    assert with_default_command(["--help"]) == ["--help"]  # top-level help, not session's
 
 
 if __name__ == "__main__":

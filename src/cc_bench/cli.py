@@ -21,6 +21,7 @@ from cc_bench import session as session_mod
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARMS_DIR = REPO_ROOT / "arms"
+COMMANDS = ("session", "arms", "prepare", "run", "gates", "extract", "report")
 
 def cmd_arms_list(_args: argparse.Namespace) -> int:
     return arms_mod.cmd_list(ARMS_DIR)
@@ -85,9 +86,16 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def with_default_command(argv: list[str]) -> list[str]:
+    """Bare `bench` (or `bench --task X`) means `bench session` -- the common case."""
+    if argv and (argv[0] in COMMANDS or argv[0] in ("-h", "--help")):
+        return argv
+    return ["session", *argv]
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(with_default_command(list(sys.argv[1:] if argv is None else argv)))
     sys.exit(args.func(args))
 
 
