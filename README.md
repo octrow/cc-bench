@@ -36,11 +36,17 @@ The protocol below exists to compare arms. For the simpler question - "I worked
 in my own repo by hand, give me the numbers for that session" - one command does
 it all.
 
-One-time setup: `uv tool install --editable ~/cybernet/cc-bench` (puts `bench` on
-PATH), telemetry in the `env` block of `~/.claude/settings.json`
-(`CLAUDE_CODE_ENABLE_TELEMETRY=1` plus the `OTEL_*` vars pointing at
-`localhost:4317`) and a running collector (`docker start bench-otel`). `bench`
-preflights the last two and refuses to burn a session it cannot measure.
+One-time setup is one script (needs `uv`, `docker`, `claude`):
+
+```bash
+git clone <this repo> ~/cc-bench && ~/cc-bench/install.sh
+```
+
+It puts `bench` on PATH, starts the OTEL collector on `localhost:4317`, and
+enables telemetry in the `env` block of `~/.claude/settings.json` (existing vars
+are preserved, the old file is backed up to `.bak`). Idempotent - re-running
+changes nothing. `bench` preflights the collector and telemetry on every launch
+and refuses to burn a session it cannot measure.
 
 ```bash
 cd ~/cybernet/conversation_flow
