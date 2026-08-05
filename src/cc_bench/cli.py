@@ -17,6 +17,7 @@ from cc_bench import gates as gates_mod
 from cc_bench import prepare as prepare_mod
 from cc_bench import report as report_mod
 from cc_bench import run as run_mod
+from cc_bench import session as session_mod
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARMS_DIR = REPO_ROOT / "arms"
@@ -56,6 +57,12 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--model", default=None, help="main model (default opus)")
     run_parser.add_argument("--workdir", default=None, help="bench workspace override")
     run_parser.set_defaults(func=run_mod.cmd_run)
+
+    session_parser = subparsers.add_parser(
+        "session", help="measure one normal interactive claude session end to end"
+    )
+    session_mod.add_arguments(session_parser)
+    session_parser.set_defaults(func=session_mod.cmd_session)
 
     gates_parser = subparsers.add_parser("gates", help="diff + ruff/pytest/scope gates vs bench-base")
     gates_parser.add_argument("--clone", required=True, help="path to arm clone")

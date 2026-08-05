@@ -30,6 +30,28 @@ uv run bench arms list        # what can be measured
 uv run bench arms validate    # check arms/*.yaml
 ```
 
+## Simple mode: one live session
+
+The protocol below exists to compare arms. For the simpler question - "I worked
+in my own repo by hand, give me the numbers for that session" - one command does
+it all.
+
+One-time setup: telemetry in the `env` block of `~/.claude/settings.json`
+(`CLAUDE_CODE_ENABLE_TELEMETRY=1` plus the `OTEL_*` vars pointing at
+`localhost:4317`) and a running collector (`docker start bench-otel`).
+`bench session` preflights both and refuses to burn a session it cannot measure.
+
+```bash
+cd ~/cybernet/conversation_flow
+uv run --directory ~/cybernet/cc-bench bench session --task CF-123
+```
+
+It launches `claude` in the cwd, waits for you to exit, waits for the OTEL
+flush, finds that session's transcript and appends a `results.csv` row.
+Defaults: repo is the cwd, task is the current git branch, `--arm live`, `--run`
+is the next `rN` for that arm+task. Forgot to wrap the session? `--no-launch`
+picks up the newest one for the repo.
+
 ## How one measurement works
 
 1. **Freeze the task.** A probe (tier P) or a ticket (tier F) plus its answer
@@ -56,6 +78,7 @@ Measured runs need a local OTEL collector on `localhost:4317`. Timing uses
 
 | Command | What it does |
 |---|---|
+| `bench session` | measure one normal interactive session end to end |
 | `bench arms list` / `validate` | list / schema-check arm definitions |
 | `bench prepare` | clone the target repo and install one arm |
 | `bench run` | headless measured run(s) for one arm |
